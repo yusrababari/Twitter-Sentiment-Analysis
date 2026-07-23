@@ -4,6 +4,24 @@ const FALLBACK_MODELS = [
   'nvidia/nemotron-3-nano-30b-a3b:free'
 ];
 
+function extractJsonArray(rawText) {
+  const text = String(rawText || '').trim();
+  const firstBracket = text.indexOf('[');
+  const lastBracket = text.lastIndexOf(']');
+  
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    const jsonSubstring = text.substring(firstBracket, lastBracket + 1);
+    try {
+      return JSON.parse(jsonSubstring);
+    } catch {
+      // Fallback to cleaning backticks if substring parse failed
+    }
+  }
+
+  const cleanedJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  return JSON.parse(cleanedJson);
+}
+
 async function callOpenRouter(lines, apiKey, modelName) {
   const cleanKey = String(apiKey || '').trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
   if (!cleanKey) {
@@ -19,7 +37,7 @@ For each tweet, return:
 Tweets:
 ${lines.map((l, i) => `${i + 1}. ${l}`).join('\n')}
 
-Respond strictly with a JSON array of objects. Example schema:
+Respond strictly with a JSON array of objects. Do not include introductory text like safety notes or explanations. Example schema:
 [
   {
     "line": "string",
@@ -41,7 +59,7 @@ Respond strictly with a JSON array of objects. Example schema:
       messages: [
         {
           role: 'system',
-          content: 'You are a precise, consistent sentiment analyzer. Output only valid JSON arrays.'
+          content: 'You are a precise sentiment analysis API. Respond only with raw JSON arrays without any extra text, headings, or safety notes.'
         },
         {
           role: 'user',
@@ -76,8 +94,7 @@ Respond strictly with a JSON array of objects. Example schema:
     throw new Error('No content returned from OpenRouter AI model.');
   }
 
-  const cleanedJson = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
-  const parsedItems = JSON.parse(cleanedJson);
+  const parsedItems = extractJsonArray(rawContent);
 
   return parsedItems.map((item, idx) => {
     const score = typeof item.score === 'number' ? item.score : 0;
@@ -116,7 +133,9 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
         err.message.includes('unavailable for free') ||
         err.message.includes('404') ||
         err.message.includes('Provider returned error') ||
-        err.message.includes('Insufficient credits')
+        err.message.includes('Insufficient credits') ||
+        err.message.includes('is not valid JSON') ||
+        err.message.includes('JSON')
       ) {
         continue;
       }
