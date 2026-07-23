@@ -115,7 +115,7 @@ export default function App() {
       <footer className="note">
         {mode === 'ai' ? (
           <>
-            Powered by OpenRouter AI. Using model <code>{model}</code>. Returns nuanced AI sentiment scores and highlights charged key phrases.
+            Powered by OpenRouter AI. Returns nuanced AI sentiment scores and highlights charged key phrases.
           </>
         ) : (
           <>
