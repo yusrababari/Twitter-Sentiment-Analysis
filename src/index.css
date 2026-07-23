@@ -8,14 +8,14 @@
   --paper-dim: #9CA3AE;
   --paper-mute: #6B7686;
   --pos: #13816f;
-  --pos-dim: #1C6E5F;
+  --pos-dim: #489687;
   --pos-bg: #152420;
-  --neg: #f72900;
+  --neg: #db4d48;
   --neg-dim: #9A3F2C;
   --neg-bg: #251813;
-  --amber: #E8A33D;
-  --amber-dim: #9C6E29;
-  --cyan: #38BDF8;
+  --amber: #7021b1;
+  --amber-dim: #c719be;
+  --cyan: #ce43ab;
 }
 
 * {
