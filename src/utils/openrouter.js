@@ -1,8 +1,7 @@
 const FALLBACK_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'openai/gpt-4o-mini',
-  'google/gemini-2.0-flash-exp:free',
-  'deepseek/deepseek-r1:free'
+  'openrouter/free',
+  'google/gemma-4-26b-a4b-it:free',
+  'nvidia/nemotron-3-nano-30b-a3b:free'
 ];
 
 async function callOpenRouter(lines, apiKey, modelName) {
@@ -63,6 +62,10 @@ Respond strictly with a JSON array of objects. Example schema:
   }
 
   const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error.message || JSON.stringify(data.error));
+  }
+
   const rawContent = data.choices?.[0]?.message?.content;
   if (!rawContent) {
     throw new Error('No content returned from OpenRouter AI model.');
@@ -88,7 +91,7 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
     throw new Error('OpenRouter API key is missing. Set VITE_OPENROUTER_API_KEY in your .env.local file.');
   }
 
-  const preferredModel = model || 'meta-llama/llama-3.3-70b-instruct:free';
+  const preferredModel = model || 'openrouter/free';
   const modelsToTry = [preferredModel, ...FALLBACK_MODELS.filter(m => m !== preferredModel)];
 
   let lastError = null;
@@ -98,8 +101,12 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
       return await callOpenRouter(lines, apiKey, m);
     } catch (err) {
       lastError = err;
-      // If error indicates endpoint not found or bad request model ID, try next model
-      if (err.message.includes('No endpoints found') || err.message.includes('404') || err.message.includes('model')) {
+      if (
+        err.message.includes('No endpoints found') ||
+        err.message.includes('unavailable for free') ||
+        err.message.includes('404') ||
+        err.message.includes('Provider returned error')
+      ) {
         continue;
       }
       throw err;
