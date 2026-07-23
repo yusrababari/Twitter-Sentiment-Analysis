@@ -5,17 +5,30 @@ import SummaryCards from './components/SummaryCards';
 import SentimentMeter from './components/SentimentMeter';
 import ResultsList from './components/ResultsList';
 import { scoreTweet, classify } from './utils/sentiment';
+import { analyzeWithOpenRouter } from './utils/openrouter';
 
 const DEFAULT_TEXT = `just tried the new update and honestly it's a mess, so disappointed
 crying at how good this album is, best thing i've heard all year
 weather's fine i guess, nothing special either way`;
 
 export default function App() {
+  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
+  const model = import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+
   const [inputText, setInputText] = useState(DEFAULT_TEXT);
   const [results, setResults] = useState([]);
   const [hasRun, setHasRun] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [mode, setMode] = useState(apiKey ? 'ai' : 'lexicon');
 
-  const handleRun = () => {
+  const toggleMode = () => {
+    setMode(prev => (prev === 'ai' ? 'lexicon' : 'ai'));
+    setErrorMsg('');
+  };
+
+  const handleRun = async () => {
+    setErrorMsg('');
     const lines = inputText
       .split('\n')
       .map(l => l.trim())
@@ -27,13 +40,31 @@ export default function App() {
       return;
     }
 
-    const scored = lines.map(line => {
-      const { score, hits } = scoreTweet(line);
-      return { line, score, hits, cls: classify(score) };
-    });
+    if (mode === 'ai') {
+      if (!apiKey) {
+        setErrorMsg('OpenRouter API key is missing. Please add VITE_OPENROUTER_API_KEY to your .env.local file or switch to Built-in Lexicon mode.');
+        return;
+      }
 
-    setResults(scored);
-    setHasRun(true);
+      setLoading(true);
+      try {
+        const scored = await analyzeWithOpenRouter(lines, apiKey, model);
+        setResults(scored);
+        setHasRun(true);
+      } catch (err) {
+        setErrorMsg(`OpenRouter AI Analysis Error: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Local Lexicon analysis
+      const scored = lines.map(line => {
+        const { score, hits } = scoreTweet(line);
+        return { line, score, hits, cls: classify(score) };
+      });
+      setResults(scored);
+      setHasRun(true);
+    }
   };
 
   const posCount = results.filter(s => s.cls === 'pos').length;
@@ -44,17 +75,29 @@ export default function App() {
 
   return (
     <div className="wrap">
-      <Header />
+      <Header
+        mode={mode}
+        hasApiKey={Boolean(apiKey)}
+        onToggleMode={toggleMode}
+      />
 
       <TweetInput
         value={inputText}
         onChange={setInputText}
         onRun={handleRun}
+        loading={loading}
+        mode={mode}
       />
+
+      {errorMsg && (
+        <div className="error-box">
+          {errorMsg}
+        </div>
+      )}
 
       <hr className="divider" />
 
-      {hasRun && (
+      {hasRun && !errorMsg && (
         <div className="summary">
           <SummaryCards posCount={posCount} neuCount={neuCount} negCount={negCount} />
           <SentimentMeter
@@ -67,11 +110,19 @@ export default function App() {
         </div>
       )}
 
-      <ResultsList items={hasRun ? results : []} />
+      <ResultsList items={hasRun && !errorMsg ? results : []} />
 
       <footer className="note">
-        Runs entirely in this page against a fixed lexicon, no live X / Twitter API connection.
-        It's a reasonable read on tone, not a substitute for careful judgement, especially with sarcasm or slang it hasn't seen.
+        {mode === 'ai' ? (
+          <>
+            Powered by OpenRouter AI. Using model <code>{model}</code>. Returns nuanced AI sentiment scores and highlights charged key phrases.
+          </>
+        ) : (
+          <>
+            Runs entirely in this page against a fixed lexicon, no live API connection required.
+            It's a reasonable read on tone, not a substitute for careful judgement, especially with sarcasm or slang.
+          </>
+        )}
       </footer>
     </div>
   );

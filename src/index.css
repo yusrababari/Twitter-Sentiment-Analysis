@@ -13,8 +13,9 @@
   --neg: #E0684F;
   --neg-dim: #9A3F2C;
   --neg-bg: #251813;
-  --amber: #e83ddf;
-  --amber-dim: #df2290;
+  --amber: #E8A33D;
+  --amber-dim: #9C6E29;
+  --cyan: #38BDF8;
 }
 
 * {
@@ -42,7 +43,7 @@ body {
 /* Masthead */
 .mast {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--hair);
@@ -61,6 +62,12 @@ body {
   border-radius: 50%;
   background: var(--amber);
   box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.15);
+  transition: all 0.3s ease;
+}
+
+.dot.ai-active {
+  background: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
 }
 
 .word-mark {
@@ -69,12 +76,28 @@ body {
   letter-spacing: 0.02em;
 }
 
-.tag {
+.mode-badge {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
-  color: var(--paper-mute);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  background: var(--ink-3);
+  color: var(--paper-dim);
+  border: 1px solid var(--hair);
+  padding: 5px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+}
+
+.mode-badge:hover {
+  border-color: var(--paper-mute);
+  color: var(--paper);
+}
+
+.mode-badge.active {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--cyan);
+  color: var(--cyan);
 }
 
 .sub {
@@ -88,6 +111,18 @@ body {
 .sub b {
   color: var(--paper);
   font-weight: 500;
+}
+
+.key-warning {
+  color: var(--amber);
+  display: block;
+  margin-top: 6px;
+}
+
+.key-warning code {
+  background: var(--ink-3);
+  padding: 2px 5px;
+  border-radius: 3px;
 }
 
 /* Form Controls */
@@ -126,6 +161,10 @@ textarea::placeholder {
   color: #4A5361;
 }
 
+textarea:disabled {
+  opacity: 0.6;
+}
+
 .controls {
   display: flex;
   align-items: center;
@@ -154,18 +193,30 @@ button.run {
   transition: background 0.15s ease, transform 0.05s ease;
 }
 
-button.run:hover {
+button.run:hover:not(:disabled) {
   background: #F3B24F;
 }
 
-button.run:active {
+button.run:active:not(:disabled) {
   transform: translateY(1px);
 }
 
 button.run:disabled {
   background: var(--hair-strong);
   color: var(--paper-mute);
-  cursor: default;
+  cursor: wait;
+}
+
+.error-box {
+  background: var(--neg-bg);
+  border: 1px solid var(--neg-dim);
+  color: var(--neg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 12px 16px;
+  border-radius: 3px;
+  margin-top: 16px;
+  line-height: 1.5;
 }
 
 .divider {
@@ -359,4 +410,10 @@ button.run:disabled {
   margin-top: 36px;
   padding-top: 18px;
   border-top: 1px solid var(--hair);
+}
+
+.note code {
+  background: var(--ink-3);
+  padding: 2px 4px;
+  border-radius: 3px;
 }
