@@ -5,6 +5,11 @@ const FALLBACK_MODELS = [
 ];
 
 async function callOpenRouter(lines, apiKey, modelName) {
+  const cleanKey = String(apiKey || '').trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
+  if (!cleanKey) {
+    throw new Error('API key is empty after cleaning.');
+  }
+
   const prompt = `Analyze the sentiment of each of the following tweets.
 For each tweet, return:
 - "line": exact original tweet text
@@ -23,14 +28,14 @@ Respond strictly with a JSON array of objects. Example schema:
   }
 ]`;
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${cleanKey}`
+  };
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
-      'X-Title': 'Signal Tweet Sentiment Reader'
-    },
+    headers,
     body: JSON.stringify({
       model: modelName,
       messages: [
@@ -87,7 +92,8 @@ Respond strictly with a JSON array of objects. Example schema:
 }
 
 export async function analyzeWithOpenRouter(lines, apiKey, model) {
-  if (!apiKey) {
+  const cleanKey = String(apiKey || '').trim().replace(/^["']|["']$/g, '').replace(/[\r\n\t]/g, '');
+  if (!cleanKey) {
     throw new Error('OpenRouter API key is missing. Set VITE_OPENROUTER_API_KEY in your .env.local file.');
   }
 
@@ -102,7 +108,7 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
 
   for (const m of modelsToTry) {
     try {
-      return await callOpenRouter(lines, apiKey, m);
+      return await callOpenRouter(lines, cleanKey, m);
     } catch (err) {
       lastError = err;
       if (
