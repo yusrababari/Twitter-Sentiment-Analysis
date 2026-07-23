@@ -13,7 +13,7 @@ weather's fine i guess, nothing special either way`;
 
 export default function App() {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-  const model = import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+  const model = import.meta.env.VITE_OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
 
   const [inputText, setInputText] = useState(DEFAULT_TEXT);
   const [results, setResults] = useState([]);

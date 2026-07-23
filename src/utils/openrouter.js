@@ -1,10 +1,11 @@
-export async function analyzeWithOpenRouter(lines, apiKey, model) {
-  if (!apiKey) {
-    throw new Error('OpenRouter API key is missing. Set VITE_OPENROUTER_API_KEY in your .env.local file.');
-  }
+const FALLBACK_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'openai/gpt-4o-mini',
+  'google/gemini-2.0-flash-exp:free',
+  'deepseek/deepseek-r1:free'
+];
 
-  const selectedModel = model || 'google/gemini-2.0-flash-001';
-
+async function callOpenRouter(lines, apiKey, modelName) {
   const prompt = `Analyze the sentiment of each of the following tweets.
 For each tweet, return:
 - "line": exact original tweet text
@@ -32,7 +33,7 @@ Respond strictly with a JSON array of objects. Example schema:
       'X-Title': 'Signal Tweet Sentiment Reader'
     },
     body: JSON.stringify({
-      model: selectedModel,
+      model: modelName,
       messages: [
         {
           role: 'system',
@@ -49,7 +50,7 @@ Respond strictly with a JSON array of objects. Example schema:
 
   if (!response.ok) {
     const errorBody = await response.text();
-    let errorMsg = `OpenRouter HTTP ${response.status}`;
+    let errorMsg = `HTTP ${response.status}`;
     try {
       const parsedErr = JSON.parse(errorBody);
       if (parsedErr.error?.message) {
@@ -80,4 +81,30 @@ Respond strictly with a JSON array of objects. Example schema:
       cls
     };
   });
+}
+
+export async function analyzeWithOpenRouter(lines, apiKey, model) {
+  if (!apiKey) {
+    throw new Error('OpenRouter API key is missing. Set VITE_OPENROUTER_API_KEY in your .env.local file.');
+  }
+
+  const preferredModel = model || 'meta-llama/llama-3.3-70b-instruct:free';
+  const modelsToTry = [preferredModel, ...FALLBACK_MODELS.filter(m => m !== preferredModel)];
+
+  let lastError = null;
+
+  for (const m of modelsToTry) {
+    try {
+      return await callOpenRouter(lines, apiKey, m);
+    } catch (err) {
+      lastError = err;
+      // If error indicates endpoint not found or bad request model ID, try next model
+      if (err.message.includes('No endpoints found') || err.message.includes('404') || err.message.includes('model')) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError || new Error('Failed to connect to OpenRouter AI models.');
 }

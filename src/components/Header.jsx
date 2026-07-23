@@ -21,7 +21,7 @@ export default function Header({ mode, hasApiKey, onToggleMode }) {
       <div className="sub">
         {mode === 'ai' ? (
           <>
-            Powered by <b>OpenRouter AI</b> ({import.meta.env.VITE_OPENROUTER_MODEL || 'google/gemini-2.0-flash-001'}). Analyzes tone, nuance, and key phrases in real-time.
+            Powered by <b>OpenRouter AI</b> ({import.meta.env.VITE_OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free'}). Analyzes tone, nuance, and key phrases in real-time.
             {!hasApiKey && (
               <span className="key-warning">
                 {' '}⚠️ No API key found in <code>.env.local</code>. Set <code>VITE_OPENROUTER_API_KEY</code> to analyze with AI.
