@@ -2,7 +2,7 @@
 
 **Signal** is a web application that analyzes and visualizes sentiment in tweets. Built with a modern, minimalist UI using **Space Grotesk** and **IBM Plex Mono** typography.
 
-🚀 **Live Demo:** twitter-sentiment-analysis-sepia.vercel.app
+🚀 **Live Demo:** https://twitter-sentiment-analysis-sepia.vercel.app/
 ---
 
 ## ✨ Features
