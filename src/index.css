@@ -194,7 +194,7 @@ button.run {
 }
 
 button.run:hover:not(:disabled) {
-  background: #F3B24F;
+  background: #9c7d9c;
 }
 
 button.run:active:not(:disabled) {
