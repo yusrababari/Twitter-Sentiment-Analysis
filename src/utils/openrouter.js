@@ -91,7 +91,11 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
     throw new Error('OpenRouter API key is missing. Set VITE_OPENROUTER_API_KEY in your .env.local file.');
   }
 
-  const preferredModel = model || 'openrouter/free';
+  let preferredModel = model || 'openrouter/free';
+  if (preferredModel.includes('gemini-2.0-flash-001') || preferredModel.includes('llama-3.3-70b-instruct:free')) {
+    preferredModel = 'openrouter/free';
+  }
+
   const modelsToTry = [preferredModel, ...FALLBACK_MODELS.filter(m => m !== preferredModel)];
 
   let lastError = null;
@@ -105,7 +109,8 @@ export async function analyzeWithOpenRouter(lines, apiKey, model) {
         err.message.includes('No endpoints found') ||
         err.message.includes('unavailable for free') ||
         err.message.includes('404') ||
-        err.message.includes('Provider returned error')
+        err.message.includes('Provider returned error') ||
+        err.message.includes('Insufficient credits')
       ) {
         continue;
       }
